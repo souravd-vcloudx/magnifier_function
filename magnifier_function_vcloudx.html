@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+</head>
+
+<body>
+    <div id="mp4">
+        <div id="video_container" style="position: relative;">
+            <video id="video1" controls height="480" width="640" autoplay loop>
+                <source src="big_buck_bunny_480p_5mb.mp4" type="video/mp4">
+            </video>
+            <!-- <img src="./xps-Qrjx2nTBHVo-unsplash.jpg" id="video1" height="480" width="640" alt="No img"> -->
+        </div>
+    </div>
+
+    <script>
+
+        function magnify_video(videoId, mag_spec, data_type) {
+            var main_video = document.querySelector(`#${videoId}`);
+            var hidden_canvas;
+            var magnify_canvas;
+            var div_mag;
+            var time_out;
+            var ctx_hidden_canvas;
+            var ctx_magnify_canvas;
+            div_mag = document.createElement('div');
+            div_mag.setAttribute('id', 'magnifier');
+            div_mag.setAttribute('style', `position:absolute ; top:0px ; left:0px ; width:${mag_spec.width}px ; height:${mag_spec.height}px ; border:1px solid ${mag_spec.border_colour} ; z-index: 1000000`);
+            document.body.appendChild(div_mag);
+            div_mag.setAttribute('style', 'display:none');
+
+            hidden_canvas = document.createElement('canvas');
+            hidden_canvas.setAttribute('id', 'hidden_canvas');
+            hidden_canvas.setAttribute('style', 'display:none;');
+            hidden_canvas.setAttribute('width', `${main_video.clientWidth}`);
+            hidden_canvas.setAttribute('height', `${main_video.clientHeight}`);
+            // document.body.appendChild(hidden_canvas);
+
+            magnify_canvas = document.createElement('canvas');
+            magnify_canvas.setAttribute('id', 'magnify_canvas');
+            magnify_canvas.setAttribute('width', `${main_video.clientWidth}`);
+            magnify_canvas.setAttribute('height', `${main_video.clientHeight}`);
+            magnify_canvas.setAttribute('style', 'position : absolute; top : 0px ; right: 0px ; border ; 2px solid red ; z-index:100000');
+            document.body.appendChild(magnify_canvas);
+
+            ctx_hidden_canvas = hidden_canvas.getContext("2d");
+            ctx_magnify_canvas = magnify_canvas.getContext("2d");
+
+            document.querySelector(`#${videoId}`).addEventListener('mousemove', function (event) {
+                console.log("eventx and eventy:", event.pageX, " ", event.pageY);
+                var magnifier_position = div_mag.getBoundingClientRect();
+                var magnifier_width = magnifier_position.width;
+                var magnifier_height = magnifier_position.height;
+                var video_position = main_video.getBoundingClientRect();
+                var video_width = video_position.width;
+                var video_height = video_position.height;
+                console.log("difference====", magnifier_position.top - video_position.top, " ", magnifier_position.left - video_position.left);
+                event.preventDefault();
+                clearTimeout(time_out);
+                if (event.clientY - (mag_spec.height) / 2 < video_position.top || event.clientX - (mag_spec.width) / 2 < video_position.left
+                    || event.clientX + (mag_spec.width) / 2 > video_position.left + video_width || event.clientY + (mag_spec.height) / 2 > video_position.top + video_height
+                ) {
+
+                    div_mag.setAttribute('style', `position:absolute ; top:0px ; left:0px ; display:none ; width:${mag_spec.width}px ; height:${mag_spec.height}px ; border:1px solid ${mag_spec.border_colour} `);
+                    ctx_magnify_canvas.clearRect(0, 0, magnify_canvas.width, magnify_canvas.height);
+                }
+                else {
+                    div_mag.setAttribute('style', `position:absolute ; top:0px ; left:0px ; display:block ; width:${mag_spec.width}px ; height:${mag_spec.height}px ; border:1px solid ${mag_spec.border_colour} ;  z-index: 1000000`);
+                    drawInCanvas(event);
+                }
+            });
+
+
+            document.querySelector('#magnifier').addEventListener('mousemove', function (event) {
+                console.log("eventx and eventy:", event.clientX, " ", event.clientY);
+                var magnifier_position = div_mag.getBoundingClientRect();
+                var magnifier_width = magnifier_position.width;
+                var magnifier_height = magnifier_position.height;
+                var video_position = main_video.getBoundingClientRect();
+                var video_width = video_position.width;
+                var video_height = video_position.height;
+                event.preventDefault();
+                clearTimeout(time_out);
+                console.log("difference====", magnifier_position.top - video_position.top, " ", magnifier_position.left - video_position.left);
+
+                if (event.clientY - (mag_spec.height) / 2 < video_position.top || event.clientX - (mag_spec.width) / 2 < video_position.left
+                    || event.clientX + (mag_spec.width) / 2 > video_position.left + video_width || event.clientY + (mag_spec.height) / 2 > video_position.top + video_height
+                ) {
+                    div_mag.setAttribute('style', `position:absolute ; top:0px ; left:0px ; display:none ; width:${mag_spec.width}px ; height:${mag_spec.height}px ; border:1px solid ${mag_spec.border_colour}`);
+                    ctx_magnify_canvas.clearRect(0, 0, magnify_canvas.width, magnify_canvas.height);
+                }
+                else {
+                    drawInCanvas(event);
+                }
+
+            });
+
+
+            function drawInCanvas(event) {
+                div_mag.style.left = (event.clientX - (mag_spec.width) / 2) + 'px';
+                div_mag.style.top = (event.clientY - (mag_spec.height) / 2) + 'px';
+                var magnifier_position = div_mag.getBoundingClientRect();
+                var magnifier_width = magnifier_position.width;
+                var magnifier_height = magnifier_position.height;
+                var video_position = main_video.getBoundingClientRect();
+                var video_width = video_position.width;
+                var video_height = video_position.height;
+                magnify_canvas.style.left = (magnifier_position.left + magnifier_width) + 'px';
+                magnify_canvas.style.top = (magnifier_position.top + magnifier_height) + 'px';
+                ctx_hidden_canvas.clearRect(0, 0, hidden_canvas.width, hidden_canvas.height);
+                ctx_hidden_canvas.drawImage(main_video, 0, 0, hidden_canvas.width, hidden_canvas.height);
+                ctx_magnify_canvas.clearRect(0, 0, magnify_canvas.width, magnify_canvas.height);
+                var imageData = ctx_hidden_canvas.getImageData(0, 0, hidden_canvas.width, hidden_canvas.height);
+                ctx_magnify_canvas.putImageData(imageData, 0, 0);
+                ctx_magnify_canvas.drawImage(magnify_canvas, magnifier_position.left - video_position.left, magnifier_position.top - video_position.top, magnifier_width - 12, magnifier_height - 12, 0, 0, magnify_canvas.width, magnify_canvas.height);
+                console.log("left , top , width , height", magnifier_position.left, " ", magnifier_position.top, " ", magnifier_width, " ", magnifier_height);
+
+                if (data_type === 'video') {
+                    time_out = setTimeout(function () {
+                        drawInCanvas(event);
+                    }, 100);
+                }
+
+            }
+        }
+
+
+
+        magnify_video('video1' , {
+            width: 200,
+            height: 200,
+            border_colour: "black",
+        }, 'video');
+
+
+    </script>
+</body>
+
+</html>
